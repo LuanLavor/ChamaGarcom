@@ -1,0 +1,11 @@
+﻿@page
+@model ChamaGarcom.Pages.QRCodesModel
+<h1>QR Codes das Mesas</h1>
+
+@foreach (var mesa in Model.Mesas)
+{
+    <div style="margin-bottom:20px;">
+        <h3>Mesa @mesa.Number</h3>
+        <img src="data:image/png;base64,@mesa.QRCodeBase64" />
+    </div>
+}

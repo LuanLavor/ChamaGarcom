@@ -1,0 +1,73 @@
+﻿@page
+@model ChamaGarcom.Pages.DashboardModel
+@{
+    ViewData["Title"] = "Painel do Garçom";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">🧑‍🍳 Painel do Garçom</h2>
+
+    <div class="row" id="callsGrid">
+        @foreach (var call in Model.Calls)
+        {
+            <div class="col-md-4 mb-3" id="call-@call.RestaurantTableId">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Mesa @call.RestaurantTable.Number</h5>
+                        <p class="card-text text-muted">
+                            Solicitação pendente
+                        </p>
+
+                        <form method="post" asp-page-handler="CompleteAsync">
+                            <input type="hidden" name="id" value="@call.Id" />
+                            <button class="btn btn-success w-100">
+                                ✅ Atender
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.7/signalr.min.js"></script>
+<script>
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/callHub")
+        .build();
+
+    connection.on("ReceiveCall", (tableId, tableNumber) => {
+        if (document.getElementById("call-" + tableId)) return;
+
+        const grid = document.getElementById("callsGrid");
+
+        const col = document.createElement("div");
+        col.className = "col-md-4 mb-3";
+        col.id = "call-" + tableId;
+
+        col.innerHTML = `
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Mesa ${tableNumber}</h5>
+                    <p class="card-text text-muted">Solicitação pendente</p>
+                    <form method="post">
+                        <button class="btn btn-success w-100"
+                            onclick="completeCall(${tableId})">
+                            ✅ Atender
+                        </button>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        grid.appendChild(col);
+    });
+
+    connection.on("CallCompleted", (tableId) => {
+        const card = document.getElementById("call-" + tableId);
+        if (card) card.remove();
+    });
+
+    connection.start();
+</script>
